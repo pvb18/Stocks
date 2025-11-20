@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pro Trading Bot</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', sans-serif; }
+    .card { background: #161b22; border: 1px solid #30363d; }
+    .table { background: #161b22; }
+    th { background: #21262d; color: #58a6ff; }
+    .badge-buy { background: #238636; }
+    .badge-sell { background: #da3633; }
+    .badge-swing { background: #f0883e; color: white; }
+    .price-up { color: #3fb950; }
+    .price-down { color: #f85149; }
+    .header { background: linear-gradient(90deg, #1f6feb, #c84efd); -webkit-background-clip: text; color: transparent; }
+  </style>
+</head>
+<body class="p-3">
+  <div class="container-fluid">
+    <h1 class="text-center display-4 fw-bold header mb-4">
+      <i class="fas fa-chart-line"></i> Pro Trading Bot
+    </h1>
+    <div class="card shadow-lg">
+      <div class="card-header text-center text-white bg-dark">
+        <h4><i class="fas fa-sync"></i> Live Market Data • Auto-Refresh 10s</h4>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle" id="stocksTable">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Price</th>
+                <th>Open</th>
+                <th>High</th>
+                <th>Low</th>
+                <th>Change%</th>
+                <th>Day Signal</th>
+                <th>Day Reason</th>
+                <th>Day P&L</th>
+                <th>Swing Signal</th>
+                <th>Swing P&L</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-alarm-tone-1075.mp3');
+    let lastData = [];
+
+    function update() {
+      fetch('/stocks')
+        .then(r => r.json())
+        .then(data => {
+          const tbody = document.querySelector('tbody');
+          tbody.innerHTML = '';
+          data.forEach(s => {
+            const old = lastData.find(x => x.symbol === s.symbol);
+            const row = document.createElement('tr');
+            const changeClass = s.change >= 0 ? 'price-up' : 'price-down';
+            const changeIcon = s.change >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+
+            // Play sound on new Buy/Sell
+            if (old && (s.day_signal !== old.day_signal || s.swing_signal !== old.swing_signal)) {
+              if (s.day_signal.includes('Buy') || s.swing_signal.includes('Buy')) audio.play().catch(() => {});
+            }
+
+            row.innerHTML = `
+              <td><strong>${s.symbol}</strong></td>
+              <td>$${s.price}</td>
+              <td>$${s.open}</td>
+              <td>$${s.high}</td>
+              <td>$${s.low}</td>
+              <td class="${changeClass}"><i class="fas ${changeIcon}"></i> ${Math.abs(s.change).toFixed(2)}%</td>
+              <td><span class="badge ${s.day_signal === 'Buy' ? 'badge-buy' : s.day_signal === 'Sell' ? 'bg-danger' : 'bg-secondary'}">${s.day_signal}</span></td>
+              <td><small>${s.day_reason}</small></td>
+              <td class="${s.day_pnl >= 0 ? 'text-success' : 'text-danger'}">$${s.day_pnl}</td>
+              <td><span class="badge badge-swing">${s.swing_signal.replace('Swing ', '')}</span></td>
+              <td class="${s.swing_pnl >= 0 ? 'text-success' : 'text-danger'}">$${s.swing_pnl}</td>
+              <td><strong>${s.swing_status}</strong></td>
+            `;
+            tbody.appendChild(row);
+          });
+          lastData = data;
+        });
+    }
+
+    update();
+    setInterval(update, 10000);
+  </script>
+</body>
+</html>
