@@ -34,9 +34,9 @@ logger = logging.getLogger(__name__)
 # ==============================
 # CONFIG
 # ==============================
-NEWS_API_KEY = os.getenv('NEWS_API_KEY', '519d266872c04858a18940d56af3f532')
-TELEGRAM_BOT_TOKEN = '7823067673:AAGmfR0XluOmVTcLn3mnmw0vf4uoZaFBljE'
-TELEGRAM_CHAT_IDS = ['7897079737', '7989878303']
+NEWS_API_KEY = os.getenv('NEWS_API_KEY', '')
+TELEGRAM_BOT_TOKEN = '7'
+TELEGRAM_CHAT_IDS = ['78970', '79803']
 
 MAX_POS_DAY = 3
 STATE_FILE = 'state.json'
@@ -295,4 +295,5 @@ def run():
 if __name__ == '__main__':
     threading.Thread(target=run, daemon=True).start()
     logger.info("PRO TRADING BOT STARTED - LIVE DASHBOARD READY")
+
     while True: time.sleep(60)
